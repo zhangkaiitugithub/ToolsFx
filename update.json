@@ -1,0 +1,22 @@
+{"version":"1.17.0","info":"1.17.0 2023-09-20, 喜迎 JDK 21 LTS
+
+新功能
+
+  🔥 StringProcess 加入tts功能
+  🔥 哈希加入各种CRC算法
+  🔥 ChaCha20-Poly1305 support AAD
+  🔥 新增最小化到系统托盘
+  🔥 Misc加入 DNS host解析,Endia,MIME解析,githubMirror
+  🔥 Misc加入 shorten url,Unit Convert,繁简体转换, 翻译
+  🔥 Signature JWT优化HMAC输入秘钥显示
+  🔥 CTF与佛论禅新增加密版本, 优化零宽显示结果
+  🔥 其他优化 =详见Changelog.md
+
+
+
+使用前请看README和wiki
+
+github项目已开通打赏(sponsor)入口,
+感谢  naonaonao师傅 大力支持！
+
+  "}

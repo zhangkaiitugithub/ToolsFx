@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package me.leon.toolsfx.plugin.net
 
 import java.net.*
@@ -7,12 +9,8 @@ object NetHelper {
 
     private val REG_CONTENT_DISPOSITION =
         Pattern.compile("filename=([^;]*)$|filename\\*=\"?.*'+([^;'\"]+)\"?")
-    const val ILLEGAL_FILE_NAME_PATTERN = "[\\/:?*\"<>|]"
     private val REG_CHINESE = Pattern.compile("[\\u4e00-\\u9fa5]")
-
-    const val COMMON_UA =
-        "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) " +
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36"
+    private val regexHeader = "([^:]+?): *(.*) *\\s*".toRegex()
 
     /** 根据响应头或者url获取文件名 */
     fun getNetFileName(response: HttpURLConnection) =
@@ -65,7 +63,6 @@ object NetHelper {
         return null
     }
 
-    private val regexHeader = "([^:]+?): *(.*) *\\s*".toRegex()
     fun parseHeaderString(headers: String) =
         regexHeader.findAll(headers).fold(mutableMapOf<String, Any>()) { acc, matchResult ->
             acc.apply { acc[matchResult.groupValues[1]] = matchResult.groupValues[2] }
@@ -74,61 +71,9 @@ object NetHelper {
     fun String.proxyType() =
         when (this) {
             "DIRECT" -> Proxy.Type.DIRECT
-            "SOCKET4", "SOCKET5" -> Proxy.Type.SOCKS
+            "SOCKS4",
+            "SOCKS5" -> Proxy.Type.SOCKS
             "HTTP" -> Proxy.Type.HTTP
             else -> Proxy.Type.DIRECT
         }
-
-    fun String.parseCurl() =
-        trim()
-            .replace("""\^|\\""".toRegex(), "")
-            .also { println(this) }
-            .split("""\s*[\^\\]*\n""".toRegex())
-            .map { it.trim().also { println(it) } }
-            .fold(Request(this)) { acc, s ->
-                acc.apply {
-                    when {
-                        s.startsWith("curl") ->
-                            acc.url = s.substring(5, s.lastIndex).removeFirstAndEndQuotes()
-                        s.startsWith("--data-raw") ->
-                            acc.method = "POST".also { acc.rawBody = s.substring(12, s.lastIndex) }
-                        s.startsWith("-d") ->
-                            acc.method =
-                                "POST".also {
-                                    val value = s.substring(4, s.lastIndex)
-                                    if (this@parseCurl.contains("Content-Type: application/json"))
-                                        acc.rawBody = value
-                                    else
-                                        acc.params[value.substringBefore("=")] =
-                                            value.substringAfter("=")
-                                }
-                        s.startsWith("--data-binary") ->
-                            acc.method = "POST".also { acc.rawBody = s.substring(15, s.lastIndex) }
-                        s.startsWith("--data") ->
-                            acc.method =
-                                "POST".also {
-                                    val value = s.substring(8, s.lastIndex)
-                                    if (this@parseCurl.contains("Content-Type: application/json"))
-                                        acc.rawBody = value
-                                    else
-                                        acc.params[value.substringBefore("=")] =
-                                            value.substringAfter("=")
-                                }
-                        s.startsWith("-H") ->
-                            with(s.substring(4, s.lastIndex)) {
-                                acc.headers.put(substringBefore(":"), substringAfter(":").trim())
-                            }
-                        else -> ""
-                    }
-                }
-            }
-            .also { println(it) }
-
-    fun String.removeFirstAndEndQuotes() =
-        replace("^[\"'](.*)[\"']?$".toRegex(), "$1").replace("'", "").trim()
-
-    @JvmStatic
-    fun main(args: Array<String>) {
-        "'Content-Type: application/json'".removeFirstAndEndQuotes().also { println(it) }
-    }
 }
